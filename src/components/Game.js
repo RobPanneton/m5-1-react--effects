@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
+import Item from "./Item";
+import useInterval from "../hooks/use-interval.hook";
 
 import cookieSrc from "../cookie.svg";
 
@@ -11,30 +13,79 @@ const items = [
 ];
 
 const Game = () => {
-  // TODO: Replace this with React state!
-  const numCookies = 100;
-  const purchasedItems = {
+  const [numCookies, setNumCookies] = useState(100);
+  const [purchasedItems, setPurchasedItems] = useState({
     cursor: 0,
     grandma: 0,
     farm: 0,
+  });
+
+  const calculateCookiesPerTick = (purchased) => {
+    let sum = 0;
+    Object.keys(purchased).forEach((item) => {
+      sum += purchased[item];
+    });
+    return sum;
   };
+
+  useInterval(() => {
+    const numOfGeneratedCookies = calculateCookiesPerTick(purchasedItems);
+
+    setNumCookies(numCookies + numOfGeneratedCookies);
+  }, 1000);
+
+  const handleClickItem = (e) => {
+    const itemName = e.currentTarget.value;
+    console.log(itemName);
+    const position = items
+      .map((item) => {
+        return item.id;
+      })
+      .indexOf(itemName);
+
+    if (items[position].cost > numCookies) {
+      return;
+    } else {
+      setNumCookies(numCookies - items[position].cost);
+      setPurchasedItems((purchasedItems) => {
+        return { ...purchasedItems, [itemName]: purchasedItems[itemName] + 1 };
+      });
+    }
+  };
+
+  const cookieClick = () => {
+    setNumCookies(numCookies + 1);
+  };
+
+  useEffect(() => {
+    document.title = `${numCookies} - Cookie Clicker`;
+  }, [numCookies]);
 
   return (
     <Wrapper>
       <GameArea>
         <Indicator>
           <Total>{numCookies} cookies</Total>
-          {/* TODO: Calcuate the cookies per second and show it here: */}
-          <strong>0</strong> cookies per second
+          <strong>
+            {purchasedItems.cursor * items[0].value +
+              purchasedItems.grandma * items[1].value +
+              purchasedItems.farm * items[2].value}
+          </strong>{" "}
+          cookies per second
         </Indicator>
-        <Button>
+        <Button onClick={cookieClick}>
           <Cookie src={cookieSrc} />
         </Button>
       </GameArea>
 
       <ItemArea>
         <SectionTitle>Items:</SectionTitle>
-        {/* TODO: Add <Item> instances here, 1 for each item type. */}
+        <Item
+          items={items}
+          numCookies={numCookies}
+          purchasedItems={purchasedItems}
+          handleClickItem={handleClickItem}
+        />
       </ItemArea>
       <HomeLink to="/">Return home</HomeLink>
     </Wrapper>
