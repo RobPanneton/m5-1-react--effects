@@ -3,6 +3,8 @@ import styled from "styled-components";
 import { Link } from "react-router-dom";
 import Item from "./Item";
 import useInterval from "../hooks/use-interval.hook";
+import useKeydown from "../hooks/use-keydown";
+import useDocumentTitle from "../hooks/use-document-title";
 
 import cookieSrc from "../cookie.svg";
 
@@ -10,6 +12,7 @@ const items = [
   { id: "cursor", name: "Cursor", cost: 10, value: 1 },
   { id: "grandma", name: "Grandma", cost: 100, value: 10 },
   { id: "farm", name: "Farm", cost: 1000, value: 80 },
+  { id: "megacursor", name: "Mega Cursor", cost: 50, value: 5 },
 ];
 
 const Game = () => {
@@ -18,48 +21,44 @@ const Game = () => {
     cursor: 0,
     grandma: 0,
     farm: 0,
+    megacursor: 0,
   });
 
   const calculateCookiesPerTick = (purchased) => {
     let sum = 0;
-    Object.keys(purchased).forEach((item) => {
-      sum += purchased[item];
+    Object.keys(purchased).forEach((item, index) => {
+      if (index !== 3) {
+        sum += purchased[item] * items[index].value;
+      }
     });
     return sum;
   };
 
   useInterval(() => {
     const numOfGeneratedCookies = calculateCookiesPerTick(purchasedItems);
-
     setNumCookies(numCookies + numOfGeneratedCookies);
   }, 1000);
 
-  const handleClickItem = (e) => {
-    const itemName = e.currentTarget.value;
-    console.log(itemName);
-    const position = items
-      .map((item) => {
-        return item.id;
-      })
-      .indexOf(itemName);
-
-    if (items[position].cost > numCookies) {
+  const handleClickItem = (item) => {
+    if (item.cost > numCookies) {
       return;
     } else {
-      setNumCookies(numCookies - items[position].cost);
+      setNumCookies(numCookies - item.cost);
+
+      item.cost += Math.round(item.cost * 0.2);
       setPurchasedItems((purchasedItems) => {
-        return { ...purchasedItems, [itemName]: purchasedItems[itemName] + 1 };
+        return { ...purchasedItems, [item.id]: purchasedItems[item.id] + 1 };
       });
     }
   };
 
   const cookieClick = () => {
-    setNumCookies(numCookies + 1);
+    const extraClicks = items[3].value * purchasedItems.megacursor;
+    setNumCookies(numCookies + 1 + extraClicks);
   };
 
-  useEffect(() => {
-    document.title = `${numCookies} - Cookie Clicker`;
-  }, [numCookies]);
+  useDocumentTitle(`${numCookies} - Cookie Clicker !`, "Cookie Clicker !");
+  useKeydown(cookieClick, "Space");
 
   return (
     <Wrapper>

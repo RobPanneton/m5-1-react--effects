@@ -4,20 +4,28 @@ import styled from "styled-components";
 const Item = ({ items, numCookies, purchasedItems, handleClickItem }) => {
   return (
     <Wrapper>
-      {items.map((item) => {
-        console.log("********", item);
+      {items.map((item, index) => {
         return (
           <ItemButton
             key={Math.random() * 10000000000}
             value={item.id}
-            onClick={handleClickItem}
+            index={index}
+            autoFocus={index === 0}
+            onClick={() => handleClickItem(item)}
           >
             <InfoBlock>
-              <ItemName>{item.id}</ItemName>
-              <p>
-                Cost: {item.cost} cookie(s). Produces {item.value}{" "}
-                cookies/second.
-              </p>
+              <ItemName>{item.name}</ItemName>
+              {index !== 3 ? (
+                <p>
+                  Cost: {item.cost} cookie(s). Produces {item.value}{" "}
+                  cookies/second.
+                </p>
+              ) : (
+                <p>
+                  Cost: {item.cost} cookie(s). Produces an extra {item.value}{" "}
+                  cookies/click.
+                </p>
+              )}
             </InfoBlock>
             <AmountBlock>
               <h1>{purchasedItems[item.id]}</h1>
